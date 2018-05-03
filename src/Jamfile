@@ -1,0 +1,7 @@
+SubDir TOP src ;
+
+LIBEX_SOURCES = [ Glob $(TOP)/src : "*.c" : names-only ] ;
+
+Library libcoin : $(LIBEX_SOURCES) ;
+
+InstallLib lib : libcoin.a ;

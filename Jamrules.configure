@@ -1,0 +1,31 @@
+rule -configure-test-libgmp- {
+    return [
+        -configure-test-compile-cc- "libgmp" :
+        "#include <gmp.h>"
+        "int main () {"
+        "mpz_t x;"
+        "mpz_init_set_str(x, "123456789", 10);"
+        "return 0;"
+        "}"
+        : : "-lgmp"
+    ] ;
+}
+
+rule -configure- {
+    if ! $(PREFIX) {
+        PREFIX = /usr/local ;
+    }
+    local pp = [ Command "echo $(PREFIX) | sed \"s/\\//\\\\\\\\\\\//g\"" : dummy ] ;
+    Command "sed \"s/@prefix/\\$(pp)/\" ./libcoin.pc.in > ./libcoin.pc" ;
+    -configure-pkg-config-necessary-
+        "libex"         "libex"
+        "libcurl"       "libcurl"
+    ;
+    if [ -configure-test-libgmp- ] == 1 {
+        -configure-add-line- "LINKLIBS.all += -lgmp -lm ;" ;
+    } else {
+        Exit "libgmp not found" ;
+    }
+}
+
+configure ;

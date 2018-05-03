@@ -1,0 +1,33 @@
+if ! $(THIS_IS_K8JAM) { Exit "You need k8jam to build this Download it here: http://repo.or.cz/w/k8jam.git" ; }
+if $(windoze) {
+    setup-windoze ;
+    use-mingw32 ;
+}
+
+if $(debug) {
+    CFLAGS.all += -O0 -g3 ;
+} else {
+    set-profile ;
+}
+set-default-locations ;
+
+CFLAGS.all += -fPIC -D_GNU_SOURCE -Wall -Iinclude/libcoin -fsplit-stack ;
+
+SubDir TOP ;
+SubInclude TOP src ;
+if $(debug) {
+    SubInclude TOP test ;
+}
+
+softinclude $(TOP)/Jamrules.configure ;
+
+InstallFile include/libcoin :
+    $(TOP)/include/libcoin/conf.h
+    $(TOP)/include/libcoin/ether.h
+    $(TOP)/include/libcoin/coin.h
+;
+
+InstallFile lib/pkgconfig : libcoin.pc ;
+
+Clean clean : libcoin.pc ;
+

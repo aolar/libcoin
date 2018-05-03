@@ -1,0 +1,7 @@
+SubDir TOP test ;
+
+Main test01 : test01.c ;
+LinkLibraries test01 : libcoin.a ;
+
+Main test02 : test02.c ;
+LinkLibraries test02 : libcoin.a ;
