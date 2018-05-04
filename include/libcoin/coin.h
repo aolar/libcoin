@@ -158,17 +158,37 @@ typedef struct {
 void mch_address_free (mch_address_t *addr);
 
 typedef void (*balance_h) (strptr_t*, strptr_t*, long double, void*);
-int mch_getmultibalances (chain_conf_t *conf, const char *addresses, const char *assets, int miniconf, balance_h fn, void *userdata);
-
+int mch_getmultibalances (chain_conf_t *conf,
+                          const char *addresses, size_t addresses_len,
+                          const char *assets, size_t assets_len,
+                          int miniconf, balance_h fn, void *userdata);
 char *mch_getnewaddress (chain_conf_t *conf);
-int mch_getaddressbalances (chain_conf_t *conf, const char *address, int miniconf, json_item_h fn, void *userdata, int flags);
-char *mch_issue (chain_conf_t *conf, const char *asset, const char *address, double amount, int digits, int can_issuemore);
-char *mch_sendfrom_d (chain_conf_t *conf, const char *from_address, const char *to_address, const char *asset, double amount);
-mch_address_t *mch_validateaddress (chain_conf_t *conf, const char *address);
-int mch_listaddresstransactions (chain_conf_t *conf, const char *address, int from, int count, json_item_h fn, void *userdata, int flags);
-int mch_getwallettransaction (chain_conf_t *conf, const char *txid, json_item_h fn, void *userdata);
-int mch_listpermissions (chain_conf_t *conf, const char *address, json_item_h fn, void *userdata);
-int mch_grant (chain_conf_t *conf, const char *address, const char *permissions);
-int mch_revoke (chain_conf_t *conf, const char *address, const char *permissions);
+int mch_getaddressbalances (chain_conf_t *conf,
+                            const char *address, size_t address_len,
+                            int miniconf, json_item_h fn, void *userdata, int flags);
+char *mch_issue (chain_conf_t *conf,
+                 const char *asset, size_t asset_len,
+                 const char *address, size_t address_len,
+                 double amount, int digits, int can_issuemore);
+char *mch_sendfrom_d (chain_conf_t *conf,
+                      const char *from_address, size_t from_address_len,
+                      const char *to_address, size_t to_address_len,
+                      const char *asset, size_t asset_len, double amount);
+mch_address_t *mch_validateaddress (chain_conf_t *conf, const char *address, size_t address_len);
+int mch_listaddresstransactions (chain_conf_t *conf,
+                                 const char *address, size_t address_len,
+                                 int from, int count, json_item_h fn, void *userdata, int flags);
+int mch_getwallettransaction (chain_conf_t *conf,
+                              const char *txid, size_t txid_len,
+                              json_item_h fn, void *userdata);
+int mch_listpermissions (chain_conf_t *conf,
+                         const char *address, size_t address_len,
+                         json_item_h fn, void *userdata);
+int mch_grant (chain_conf_t *conf,
+               const char *address, size_t address_len,
+               const char *permissions, size_t permissions_len);
+int mch_revoke (chain_conf_t *conf,
+                const char *address, size_t address_len,
+                const char *permissions, size_t permissions_len);
 
 #endif // __COIN_H__

@@ -392,11 +392,11 @@ static int on_validaddress (json_item_t *ji, mch_address_t *res) {
     return ENUM_CONTINUE;
 }
 
-mch_address_t *mch_validateaddress (chain_conf_t *conf, const char *address) {
+mch_address_t *mch_validateaddress (chain_conf_t *conf, const char *address, size_t address_len) {
     mch_address_t *res = NULL;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("validateaddress"));
-    json_add_str(&buf, CONST_STR_NULL, address, strlen(address), JSON_END);
+    json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_END);
     query_close(&buf);
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_OBJECT == jr->type) {
         res = calloc(1, sizeof(mch_address_t));
@@ -413,11 +413,13 @@ void mch_address_free (mch_address_t *addr) {
     free(addr);
 }
 
-int mch_getaddressbalances (chain_conf_t *conf, const char *address, int miniconf, json_item_h fn, void *userdata, int flags) {
+int mch_getaddressbalances (chain_conf_t *conf,
+                            const char *address, size_t address_len,
+                            int miniconf, json_item_h fn, void *userdata, int flags) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("getaddressbalances"));
-    json_add_str(&buf, CONST_STR_NULL, address, strlen(address), miniconf > 0 ? JSON_NEXT : JSON_END);
+    json_add_str(&buf, CONST_STR_NULL, address, address_len, miniconf > 0 ? JSON_NEXT : JSON_END);
     if (miniconf > 0)
         json_add_int(&buf, CONST_STR_NULL, miniconf, JSON_END);
     query_close(&buf);
@@ -429,12 +431,13 @@ int mch_getaddressbalances (chain_conf_t *conf, const char *address, int minicon
     return rc;
 }
 
-// FIXME : check units for presision
-char *mch_issue (chain_conf_t *conf, const char *asset, const char *address, double amount, int digits, int can_issuemore) {
+char *mch_issue (chain_conf_t *conf,
+                 const char *asset, size_t asset_len,
+                 const char *address, size_t address_len,
+                 double amount, int digits, int can_issuemore) {
     char *txid = NULL;
     int is_exists = 0, is_valid = 0;
-    size_t addr_len = strlen(address);
-    mch_address_t *addr = mch_validateaddress(conf, address);
+    mch_address_t *addr = mch_validateaddress(conf, address, address_len);
     if (!addr)
         return NULL;
     is_valid = (addr->flags & MCA_ISVALID);
@@ -443,8 +446,8 @@ char *mch_issue (chain_conf_t *conf, const char *asset, const char *address, dou
         PREPARE_EXEC
         if (is_exists) {
             query_open(&buf, CONST_STR_LEN("issuemore"));
-            json_add_str(&buf, CONST_STR_NULL, address, addr_len, JSON_NEXT);
-            json_add_str(&buf, CONST_STR_NULL, asset, strlen(asset), JSON_NEXT);
+            json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
+            json_add_str(&buf, CONST_STR_NULL, asset, asset_len, JSON_NEXT);
             json_add_double_p(&buf, CONST_STR_NULL, amount, 8, JSON_END);
         } else {
             double units = 1.0;
@@ -453,9 +456,9 @@ char *mch_issue (chain_conf_t *conf, const char *asset, const char *address, dou
                     units /= 10;
             }
             query_open(&buf, CONST_STR_LEN("issue"));
-            json_add_str(&buf, CONST_STR_NULL, address, addr_len, JSON_NEXT);
+            json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
             json_open_object(&buf, CONST_STR_NULL);
-            json_add_str(&buf, CONST_STR_LEN("name"), asset, strlen(asset), JSON_NEXT);
+            json_add_str(&buf, CONST_STR_LEN("name"), asset, asset_len, JSON_NEXT);
             if (can_issuemore)
                 json_add_true(&buf, CONST_STR_LEN("open"), JSON_END);
             else
@@ -472,13 +475,16 @@ char *mch_issue (chain_conf_t *conf, const char *asset, const char *address, dou
     return txid;
 }
 
-char *mch_sendfrom_d (chain_conf_t *conf, const char *from_address, const char *to_address, const char *asset, double amount) {
+char *mch_sendfrom_d (chain_conf_t *conf,
+                      const char *from_address, size_t from_address_len,
+                      const char *to_address, size_t to_address_len,
+                      const char *asset, size_t asset_len, double amount) {
     char *txid = NULL;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("sendassetfrom"));
-    json_add_str(&buf, CONST_STR_NULL, from_address, strlen(from_address), JSON_NEXT);
-    json_add_str(&buf, CONST_STR_NULL, to_address, strlen(to_address), JSON_NEXT);
-    json_add_str(&buf, CONST_STR_NULL, asset, strlen(asset), JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, from_address, from_address_len, JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, to_address, to_address_len, JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, asset, asset_len, JSON_NEXT);
     json_add_double(&buf, CONST_STR_NULL, amount, JSON_END);
     query_close(&buf);
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
@@ -487,11 +493,13 @@ char *mch_sendfrom_d (chain_conf_t *conf, const char *from_address, const char *
     return txid;
 }
 
-int mch_listaddresstransactions (chain_conf_t *conf, const char *address, int from, int count, json_item_h fn, void *userdata, int flags) {
+int mch_listaddresstransactions (chain_conf_t *conf,
+                                 const char *address, size_t address_len,
+                                 int from, int count, json_item_h fn, void *userdata, int flags) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("listaddresstransactions"));
-    json_add_str(&buf, CONST_STR_NULL, address, strlen(address), JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
     json_add_int(&buf, CONST_STR_NULL, count, JSON_NEXT);
     json_add_int(&buf, CONST_STR_NULL, from, JSON_END);
     query_close(&buf);
@@ -503,11 +511,13 @@ int mch_listaddresstransactions (chain_conf_t *conf, const char *address, int fr
     return rc;
 }
 
-int mch_getwallettransaction (chain_conf_t *conf, const char *txid, json_item_h fn, void *userdata) {
+int mch_getwallettransaction (chain_conf_t *conf,
+                              const char *txid, size_t txid_len,
+                              json_item_h fn, void *userdata) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("getwallettransaction"));
-    json_add_str(&buf, CONST_STR_NULL, txid, strlen(txid), JSON_END);
+    json_add_str(&buf, CONST_STR_NULL, txid, txid_len, JSON_END);
     query_close(&buf);
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_OBJECT == jr->type) {
         fn(jr, userdata);
@@ -517,13 +527,15 @@ int mch_getwallettransaction (chain_conf_t *conf, const char *txid, json_item_h 
     return rc;
 }
 
-int mch_listpermissions (chain_conf_t *conf, const char *address, json_item_h fn, void *userdata) {
+int mch_listpermissions (chain_conf_t *conf,
+                         const char *address, size_t address_len,
+                         json_item_h fn, void *userdata) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("listpermissions"));
     if (address) {
         json_add_str(&buf, CONST_STR_NULL, CONST_STR_LEN("*"), JSON_NEXT);
-        json_add_str(&buf, CONST_STR_NULL, address, strlen(address), JSON_END);
+        json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_END);
     }
     query_close(&buf);
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_ARRAY == jr->type) {
@@ -557,16 +569,19 @@ static int on_enum_balances (json_item_t *ji, on_balance_t *b) {
     return 0;
 }
 
-int mch_getmultibalances (chain_conf_t *conf, const char *addresses, const char *assets, int miniconf, balance_h fn, void *userdata) {
+int mch_getmultibalances (chain_conf_t *conf,
+                          const char *addresses, size_t addresses_len,
+                          const char *assets, size_t assets_len,
+                          int miniconf, balance_h fn, void *userdata) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("getmultibalances"));
-    if (addresses)
-        json_add_str(&buf, CONST_STR_NULL, addresses, strlen(addresses), JSON_NEXT);
+    if (addresses && addresses_len)
+        json_add_str(&buf, CONST_STR_NULL, addresses, addresses_len, JSON_NEXT);
     else
         json_add_str(&buf, CONST_STR_NULL, CONST_STR_LEN("*"), JSON_NEXT);
-    if (assets)
-        json_add_str(&buf, CONST_STR_NULL, assets, strlen(assets), JSON_NEXT);
+    if (assets && assets_len)
+        json_add_str(&buf, CONST_STR_NULL, assets, assets_len, JSON_NEXT);
     else
         json_add_str(&buf, CONST_STR_NULL, CONST_STR_LEN("*"), JSON_NEXT);
     if (miniconf <= 0)
@@ -583,12 +598,14 @@ int mch_getmultibalances (chain_conf_t *conf, const char *addresses, const char 
     return rc;
 }
 
-int mch_grant (chain_conf_t *conf, const char *address, const char *permissions) {
+int mch_grant (chain_conf_t *conf,
+               const char *address, size_t address_len,
+               const char *permissions, size_t permissions_len) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("grant"));
-    json_add_str(&buf, CONST_STR_NULL, address, strlen(address), JSON_NEXT);
-    json_add_str(&buf, CONST_STR_NULL, permissions, strlen(permissions), JSON_END);
+    json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, permissions, permissions_len, JSON_END);
     query_close(&buf);
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
         rc = 0;
@@ -596,12 +613,14 @@ int mch_grant (chain_conf_t *conf, const char *address, const char *permissions)
     return rc;
 }
 
-int mch_revoke (chain_conf_t *conf, const char *address, const char *permissions) {
+int mch_revoke (chain_conf_t *conf,
+                const char *address, size_t address_len,
+                const char *permissions, size_t permissions_len) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("revoke"));
-    json_add_str(&buf, CONST_STR_NULL, address, strlen(address), JSON_NEXT);
-    json_add_str(&buf, CONST_STR_NULL, permissions, strlen(permissions), JSON_END);
+    json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, permissions, permissions_len, JSON_END);
     query_close(&buf);
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
         rc = 0;
