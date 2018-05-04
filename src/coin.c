@@ -534,6 +534,55 @@ int mch_listpermissions (chain_conf_t *conf, const char *address, json_item_h fn
     return rc;
 }
 
+typedef struct {
+    strptr_t *address;
+    void *userdata;
+    balance_h fn;
+} on_balance_t;
+
+static int on_enum_balance (json_item_t *ji, on_balance_t *b) {
+    if (JSON_OBJECT != ji->type)
+        return 0;
+    json_item_t *j_name, *j_qty;
+    if ((j_name = json_find(ji->data.o, CONST_STR_LEN("name"), JSON_STRING)) && (j_qty = json_find(ji->data.o, CONST_STR_LEN("qty"), JSON_DOUBLE)))
+        b->fn(b->address, &j_name->data.s, j_qty->data.d, b->userdata);
+    return 0;
+}
+
+static int on_enum_balances (json_item_t *ji, on_balance_t *b) {
+    if (JSON_ISNAME(ji, "total") || JSON_ARRAY != ji->type)
+        return 0;
+    b->address = &ji->key;
+    json_enum_array(ji->data.a, (json_item_h)on_enum_balance, (void*)b, 0);
+    return 0;
+}
+
+int mch_getmultibalances (chain_conf_t *conf, const char *addresses, const char *assets, int miniconf, balance_h fn, void *userdata) {
+    int rc = -1;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("getmultibalances"));
+    if (addresses)
+        json_add_str(&buf, CONST_STR_NULL, addresses, strlen(addresses), JSON_NEXT);
+    else
+        json_add_str(&buf, CONST_STR_NULL, CONST_STR_LEN("*"), JSON_NEXT);
+    if (assets)
+        json_add_str(&buf, CONST_STR_NULL, assets, strlen(assets), JSON_NEXT);
+    else
+        json_add_str(&buf, CONST_STR_NULL, CONST_STR_LEN("*"), JSON_NEXT);
+    if (miniconf <= 0)
+        json_add_int(&buf, CONST_STR_NULL, 1, JSON_END);
+    else
+        json_add_int(&buf, CONST_STR_NULL, miniconf, JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_OBJECT == jr->type) {
+        on_balance_t b = { .userdata = userdata, .fn = fn };
+        json_enum_object(jr->data.o, (json_item_h)on_enum_balances, (void*)&b, 0);
+        rc = 0;
+    }
+    DONE_EXEC
+    return rc;
+}
+
 int mch_grant (chain_conf_t *conf, const char *address, const char *permissions) {
     int rc = -1;
     PREPARE_EXEC

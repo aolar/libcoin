@@ -157,6 +157,9 @@ typedef struct {
 } mch_address_t;
 void mch_address_free (mch_address_t *addr);
 
+typedef void (*balance_h) (strptr_t*, strptr_t*, long double, void*);
+int mch_getmultibalances (chain_conf_t *conf, const char *addresses, const char *assets, int miniconf, balance_h fn, void *userdata);
+
 char *mch_getnewaddress (chain_conf_t *conf);
 int mch_getaddressbalances (chain_conf_t *conf, const char *address, int miniconf, json_item_h fn, void *userdata, int flags);
 char *mch_issue (chain_conf_t *conf, const char *asset, const char *address, double amount, int digits, int can_issuemore);
