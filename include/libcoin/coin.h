@@ -190,5 +190,10 @@ int mch_grant (chain_conf_t *conf,
 int mch_revoke (chain_conf_t *conf,
                 const char *address, size_t address_len,
                 const char *permissions, size_t permissions_len);
+char *mch_dumpprivkey (chain_conf_t *conf,
+                       const char *address, size_t address_len);
+int mch_importprivkey (chain_conf_t *conf,
+                       const char *privkey, size_t privkey_len,
+                       int is_rescan);
 
 #endif // __COIN_H__

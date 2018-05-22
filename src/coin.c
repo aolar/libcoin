@@ -627,3 +627,32 @@ int mch_revoke (chain_conf_t *conf,
     DONE_EXEC
     return rc;
 }
+
+char *mch_dumpprivkey (chain_conf_t *conf, const char *address, size_t address_len) {
+    char *privkey = NULL;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("dumpprivkey"));
+    json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
+        privkey = json_str(jr);
+    DONE_EXEC
+    return privkey;
+}
+
+int mch_importprivkey (chain_conf_t *conf, const char *privkey, size_t privkey_len, int is_rescan) {
+    int rc = -1;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("importprivkey"));
+    if (is_rescan)
+        json_add_str(&buf, CONST_STR_NULL, privkey, privkey_len, JSON_END);
+    else {
+        json_add_str(&buf, CONST_STR_NULL, privkey, privkey_len, JSON_NEXT);
+        json_add_false(&buf, CONST_STR_NULL, JSON_END);
+    }
+    if (!(json = do_rpc(curl, conf, &buf, &jr)))
+        rc = 0;
+    query_close(&buf);
+    DONE_EXEC
+    return rc;
+}
