@@ -117,7 +117,7 @@ static void try_load_mconf(const char *dir, const char *chain_name) {
     str_t *conf_name = path_combine(dir, chain_name, "multichain.conf", NULL),
           *param_name = path_combine(dir, chain_name, "params.dat", NULL);
     if (-1 != stat(conf_name->ptr, &st) && -1 != stat(param_name->ptr, &st)) {
-        int port = -1, target_block_time = 0;
+        int port = -1, target_block_time = 0, network_port = -1;
         chain_conf_t *conf = calloc(1, sizeof(chain_conf_t));
         conf->rpc_port = -1;
         load_conf_exactly(conf_name->ptr, CONF_HANDLER
@@ -129,9 +129,11 @@ static void try_load_mconf(const char *dir, const char *chain_name) {
             ASSIGN_CONF_STR(conf->name, "chain-name")
             ASSIGN_CONF_STR(conf->chain_protocol, "chain-protocol")
             ASSIGN_CONF_INT(target_block_time, "target-block-time")
+            ASSIGN_CONF_INT(network_port, "default-network-port");
         CONF_HANDLER_END);
-        if (port > 0 && conf->rpc_user && conf->rpc_pass && conf->name && conf->chain_protocol) {
+        if (port > 0 && network_port > 0 && conf->rpc_user && conf->rpc_pass && conf->name && conf->chain_protocol) {
             conf->rpc_port = port;
+            conf->network_port = network_port;
             conf->rpc_host = mkstr(CONST_STR_LEN(DEFAULT_HOST), 8);
             conf->rpc_prot = mkstr(CONST_STR_LEN(DEFAULT_PROT), 8);
             conf->target_block_time = target_block_time;

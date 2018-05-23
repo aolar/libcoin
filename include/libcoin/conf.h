@@ -33,6 +33,7 @@ typedef struct {
     str_t *name;
     str_t *chain_protocol;
     int rpc_port;
+    int network_port;
     int target_block_time;
     str_t *rpc_host;
     str_t *rpc_prot;
