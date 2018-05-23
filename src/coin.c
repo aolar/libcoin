@@ -656,3 +656,14 @@ int mch_importprivkey (chain_conf_t *conf, const char *privkey, size_t privkey_l
     DONE_EXEC
     return rc;
 }
+
+int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata, int flags) {
+    int rc = -1;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("getblockchainparams"));
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_OBJECT == jr->type)
+        json_enum_object(jr->data.o, fn, userdata, flags);
+    DONE_EXEC
+    return rc;
+}
