@@ -662,8 +662,10 @@ int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata,
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("getblockchainparams"));
     query_close(&buf);
-    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_OBJECT == jr->type)
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_OBJECT == jr->type) {
         json_enum_object(jr->data.o, fn, userdata, flags);
+        rc = 0;
+    }
     DONE_EXEC
     return rc;
 }
