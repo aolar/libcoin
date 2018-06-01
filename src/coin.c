@@ -670,7 +670,7 @@ int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata,
     return rc;
 }
 
-int msh_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int flags) {
+int mch_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int flags) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("getaddresses"));
