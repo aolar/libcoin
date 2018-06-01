@@ -196,5 +196,6 @@ int mch_importprivkey (chain_conf_t *conf,
                        const char *privkey, size_t privkey_len,
                        int is_rescan);
 int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata, int flags);
+int msh_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int flags);
 
 #endif // __COIN_H__

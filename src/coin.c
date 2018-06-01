@@ -669,3 +669,16 @@ int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata,
     DONE_EXEC
     return rc;
 }
+
+int msh_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int flags) {
+    int rc = -1;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("getaddresses"));
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_ARRAY == jr->type) {
+        json_enum_array(jr->data.a, fn, userdata, flags);
+        rc = 0;
+    }
+    DONE_EXEC
+    return rc;
+}
