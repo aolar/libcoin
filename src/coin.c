@@ -683,3 +683,31 @@ int mch_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int fl
     DONE_EXEC
     return rc;
 }
+
+int mch_dumpwallet (chain_conf_t *conf, const char *filename) {
+    int rc = -1;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("dumpwallet"));
+    json_add_str(&buf, CONST_STR_NULL, filename, strlen(filename), JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && 0 == coin_errcode)
+        rc = 0;
+    DONE_EXEC
+    return rc;
+}
+
+int mch_importwallet (chain_conf_t *conf, const char *filename, int is_rescan) {
+    int rc = -1;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("importwallet"));
+    json_add_str(&buf, CONST_STR_NULL, filename, strlen(filename), JSON_NEXT);
+    if (is_rescan)
+        json_add_int(&buf, CONST_STR_NULL, 0, JSON_END);
+    else
+        json_add_int(&buf, CONST_STR_NULL, -1, JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && 0 == coin_errcode)
+        rc = 0;
+    DONE_EXEC
+    return rc;
+}
