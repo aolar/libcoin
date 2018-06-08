@@ -648,7 +648,8 @@ int mch_importprivkey (chain_conf_t *conf, const char *privkey, size_t privkey_l
         json_add_false(&buf, CONST_STR_NULL, JSON_END);
     }
     query_close(&buf);
-    if (!(json = do_rpc(curl, conf, &buf, &jr)))
+    json = do_rpc(curl, conf, &buf, &jr);
+    if (0 == coin_errcode)
         rc = 0;
     query_close(&buf);
     DONE_EXEC
