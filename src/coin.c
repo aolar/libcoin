@@ -76,15 +76,12 @@ static json_t *do_rpc (CURL *curl, chain_conf_t *conf, strbuf_t *buf, json_item_
     coin_errcode = COIN_INVJSON;
     if (JSON_OBJECT != json->type)
         goto done;
-    if (!(ji = json_find(json->data.o, CONST_STR_LEN("result"), -1)))
+    if (!(*result = json_find(json->data.o, CONST_STR_LEN("result"), -1)))
         goto done;
-    if (JSON_NULL != ji->type) {
-        coin_errcode = 0;
-        *result = ji;
-        goto done;
-    }
+    coin_errcode = 0;
     if (!(ji = json_find(json->data.o, CONST_STR_LEN("error"), JSON_OBJECT)))
         goto done;
+    coin_errcode = COIN_INVJSON;
     if (!(j = json_find(ji->data.o, CONST_STR_LEN("message"), JSON_STRING)))
         goto done;
     strncpy(coin_errmsg, j->data.s.ptr, j->data.s.len < sizeof(coin_errmsg)-1 ? j->data.s.len : sizeof(coin_errmsg)-1);
@@ -690,7 +687,8 @@ int mch_dumpwallet (chain_conf_t *conf, const char *filename) {
     query_open(&buf, CONST_STR_LEN("dumpwallet"));
     json_add_str(&buf, CONST_STR_NULL, filename, strlen(filename), JSON_END);
     query_close(&buf);
-    if ((json = do_rpc(curl, conf, &buf, &jr)) && 0 == coin_errcode)
+    json = do_rpc(curl, conf, &buf, &jr);
+    if (0 == coin_errcode)
         rc = 0;
     DONE_EXEC
     return rc;
@@ -700,13 +698,14 @@ int mch_importwallet (chain_conf_t *conf, const char *filename, int is_rescan) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("importwallet"));
-    json_add_str(&buf, CONST_STR_NULL, filename, strlen(filename), JSON_NEXT);
-    if (is_rescan)
-        json_add_int(&buf, CONST_STR_NULL, 0, JSON_END);
-    else
-        json_add_int(&buf, CONST_STR_NULL, -1, JSON_END);
+    json_add_str(&buf, CONST_STR_NULL, filename, strlen(filename), JSON_END);
+//    if (is_rescan)
+//        json_add_int(&buf, CONST_STR_NULL, 0, JSON_END);
+//    else
+//        json_add_int(&buf, CONST_STR_NULL, -1, JSON_END);
     query_close(&buf);
-    if ((json = do_rpc(curl, conf, &buf, &jr)) && 0 == coin_errcode)
+    json = do_rpc(curl, conf, &buf, &jr);
+    if (0 == coin_errcode)
         rc = 0;
     DONE_EXEC
     return rc;
