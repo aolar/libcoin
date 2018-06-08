@@ -198,6 +198,6 @@ int mch_importprivkey (chain_conf_t *conf,
 int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata, int flags);
 int mch_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int flags);
 int mch_dumpwallet (chain_conf_t *conf, const char *filename);
-int mch_importwallet (chain_conf_t *conf, const char *filename, int is_rescan);
+int mch_importwallet (chain_conf_t *conf, const char *filename);
 
 #endif // __COIN_H__

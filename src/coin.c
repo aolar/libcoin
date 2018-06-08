@@ -694,15 +694,11 @@ int mch_dumpwallet (chain_conf_t *conf, const char *filename) {
     return rc;
 }
 
-int mch_importwallet (chain_conf_t *conf, const char *filename, int is_rescan) {
+int mch_importwallet (chain_conf_t *conf, const char *filename) {
     int rc = -1;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("importwallet"));
     json_add_str(&buf, CONST_STR_NULL, filename, strlen(filename), JSON_END);
-//    if (is_rescan)
-//        json_add_int(&buf, CONST_STR_NULL, 0, JSON_END);
-//    else
-//        json_add_int(&buf, CONST_STR_NULL, -1, JSON_END);
     query_close(&buf);
     json = do_rpc(curl, conf, &buf, &jr);
     if (0 == coin_errcode)
