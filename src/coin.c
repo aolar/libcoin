@@ -708,10 +708,13 @@ int mch_importwallet (chain_conf_t *conf, const char *filename) {
     return rc;
 }
 
-void mch_stop (chain_conf_t *conf) {
+char *mch_stop (chain_conf_t *conf) {
+    char *res = NULL;
     PREPARE_EXEC
     query_open(&buf, CONST_STR_LEN("stop"));
     query_close(&buf);
-    json = do_rpc(curl, conf, &buf, &jr);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
+        res = json_str(jr);
     DONE_EXEC
+    return res;
 }
