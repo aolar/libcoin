@@ -707,3 +707,11 @@ int mch_importwallet (chain_conf_t *conf, const char *filename) {
     DONE_EXEC
     return rc;
 }
+
+void mch_stop (chain_conf_t *conf) {
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("stop"));
+    query_close(&buf);
+    json = do_rpc(curl, conf, &buf, &jr);
+    DONE_EXEC
+}

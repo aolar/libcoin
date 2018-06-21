@@ -199,5 +199,6 @@ int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata,
 int mch_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int flags);
 int mch_dumpwallet (chain_conf_t *conf, const char *filename);
 int mch_importwallet (chain_conf_t *conf, const char *filename);
+void mch_stop (chain_conf_t *conf);
 
 #endif // __COIN_H__
