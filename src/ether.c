@@ -32,22 +32,6 @@ static void done () {
     mpz_clear(max_wei);
 }
 
-/*str_t *ether_str_to_int_str (const char *ether_amount) {
-    str_t *res = NULL;
-    char *p = strchr(ether_amount, '.');
-    if (p) {
-        size_t l = strlen(p+1), n = ETH_DSCALE - l;
-        res = mkstr(ether_amount, (uintptr_t)p - (uintptr_t)ether_amount, ETH_DSCALE);
-        strnadd(&res, p + 1, l);
-        if (n > 0)
-            strpad(&res, res->len + n, '0', STR_LEFT);
-    } else {
-        res = mkstr(ether_amount, strlen(ether_amount), ETH_DSCALE);
-        strpad(&res, res->len + ETH_DSCALE, '0', STR_LEFT);
-    }
-    return res;
-}*/
-
 char *ether_hex_to_int_str (const char *amount) {
     mpz_t z;
     if (strlen(amount) < 3)
