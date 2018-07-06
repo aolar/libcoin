@@ -153,6 +153,8 @@ void mch_load_conf (const char *home) {
         DIR *dp = opendir(dir->ptr);
         if (dp) {
             struct dirent *ep;
+            if (mch_conf)
+                lst_clear(mch_conf);
             while ((ep = readdir(dp))) {
                 if (DT_DIR == ep->d_type && '.' != *ep->d_name && 0 != strcmp(ep->d_name, "start"))
                     try_load_mconf(dir->ptr, ep->d_name);
