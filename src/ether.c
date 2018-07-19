@@ -42,29 +42,31 @@ char *ether_hex_to_int_str (const char *amount) {
     return res;
 }
 
-static int method_compare (const char *proto, eth_method_t *m) {
-    return strcmp(proto, m->proto);
+static int method_compare (eth_method_t *x, eth_method_t *y) {
+    return strcmp(x->proto, y->proto);
 }
 
 eth_contract_t *eth_declare_contract (const char *address) {
     eth_contract_t *contract = calloc(1, sizeof(eth_contract_t));
     contract->address = strdup(address);
-    contract->methods = array_alloc(sizeof(eth_method_t), 8);
-    contract->methods->on_compare = (compare_h)method_compare;
+    INIT_SORTED_ARRAY(eth_method_list_t, contract->methods, 8, 8, NULL, method_compare);
     return contract;
 }
 
 eth_method_t *eth_declare_method (eth_contract_t *contract, const char *proto, size_t proto_len) {
     str_t *sha = eth_sha3(proto, proto_len);
-    eth_method_t *m = NULL;
+    eth_method_t *res = NULL;
     if (sha) {
-        m = array_add(contract->methods, (void*)proto);
-        memset(m, 0, sizeof(eth_method_t));
-        m->proto = strdup(proto);
-        m->sign = strndup(sha->ptr, 10);
+        eth_method_t m = { .proto = (char*)proto };
+        size_t idx;
+        SORTED_ARRAY_ADD(contract->methods, m, idx);
+        res = &contract->methods->ptr[idx];
+        memset(res, 0, sizeof(eth_method_t));
+        res->proto = strdup(proto);
+        res->sign = strndup(sha->ptr, 10);
         free(sha);
     }
-    return m;
+    return res;
 }
 
 static str_t *get_proto (const char *name, size_t name_len, list_t *args) {
@@ -179,7 +181,7 @@ err:
 void eth_free_contract (eth_contract_t *contract) {
     free(contract->address);
     for (size_t i = 0; i < contract->methods->len; ++i) {
-        eth_method_t *m = contract->methods->data + (i * contract->methods->data_size);
+        eth_method_t *m = &contract->methods->ptr[i];
         free(m->proto);
         free(m->sign);
         if (m->outputs) {
@@ -188,7 +190,7 @@ void eth_free_contract (eth_contract_t *contract) {
             free(m->outputs);
         }
     }
-    array_free(contract->methods);
+    ARRAY_FREE(contract->methods);
     free(contract);
 }
 
@@ -359,14 +361,17 @@ void eth_ctx_clear (eth_ctx_t *ctx) {
 }
 
 int eth_prepare_exec (eth_contract_t *contract, const char *from, const char *proto, eth_ctx_t *ctx) {
-    array_t *methods = contract->methods;
-    ssize_t idx = array_find(methods, (void*)proto);
-    if (-1 == idx) {
+    eth_method_list_t *methods = contract->methods;
+    eth_method_t t = { .proto = (char*)proto };
+    size_t idx;
+    int is_found;
+    SORTED_ARRAY_FIND(methods, t, idx, is_found);
+    if (!is_found) {
         coin_errcode = COIN_NOMETHOD;
         snprintf(coin_errmsg, sizeof coin_errmsg, "unknown contract method %s", proto);
         return -1;
     }
-    eth_method_t *m = (eth_method_t*)(methods->data + idx * methods->data_size);
+    eth_method_t *m = &methods->ptr[idx];
     strbuf_t *buf = &ctx->buf;
     strbufalloc(buf, 256, 256);
     if (ST_VIEW == m->state)

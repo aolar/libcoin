@@ -34,9 +34,11 @@ typedef struct {
     size_t output_len;
 } eth_method_t;
 
+DEFINE_SORTED_ARRAY(eth_method_list_t, eth_method_t);
+
 typedef struct {
     char *address;
-    array_t *methods;
+    eth_method_list_t *methods;
 } eth_contract_t;
 
 typedef enum { ETH_CALL, ETH_SENDTRAN } eth_call_type_t;
