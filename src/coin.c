@@ -1,4 +1,4 @@
-#include "coin.h"
+#include "../include/libcoin/coin.h"
 
 #define COIN_DEC_STR "100000000"
 #define COIN_DEC 100000000

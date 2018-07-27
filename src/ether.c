@@ -1,4 +1,4 @@
-#include "ether.h"
+#include "../include/libcoin/ether.h"
 
 #define MAX_WEI_HEX "effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
 #define WEI_IN_ETHER "1000000000000000000"

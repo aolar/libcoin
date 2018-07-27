@@ -1,4 +1,4 @@
-#include "conf.h"
+#include "../include/libcoin/conf.h"
 
 __thread int coin_errcode = 0;
 __thread char coin_errmsg [256] = { '\0' };
