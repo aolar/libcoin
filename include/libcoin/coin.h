@@ -213,6 +213,12 @@ int mch_liststreampublisheritems (chain_conf_t *conf, mch_stream_t mch_stream,
                                   const char *address, size_t address_len, int from, int count,
                                   json_item_h fn, void *userdata, int flags);
 char *mch_gettxoutdata (chain_conf_t *conf, const char *txid, size_t txid_len, int vout);
+int mch_liststreamitems (chain_conf_t *conf, mch_stream_t mch_stream,
+                         int from, int count,
+                         json_item_h fn, void *userdata, int flags);
+int mch_liststreamkeyitems (chain_conf_t *conf, const char *key, size_t key_len, mch_stream_t mch_stream,
+                            int from , int count,
+                            json_item_h fn, void *userdata, int flags);
 char *mch_stop (chain_conf_t *conf);
 
 #endif // __COIN_H__

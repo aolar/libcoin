@@ -808,7 +808,7 @@ int mch_liststreampublisheritems (chain_conf_t *conf, mch_stream_t mch_stream,
     json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
     if (count <= 0) count = 10;
     if (from <= 0) from = 0;
-    json_add_false(&buf, CONST_STR_NULL, JSON_NEXT);
+    json_add_true(&buf, CONST_STR_NULL, JSON_NEXT);
     json_add_int(&buf, CONST_STR_NULL, count, JSON_NEXT);
     json_add_int(&buf, CONST_STR_NULL, from, JSON_END);
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_ARRAY == jr->type) {
@@ -831,6 +831,51 @@ char *mch_gettxoutdata (chain_conf_t *conf, const char *txid, size_t txid_len, i
     query_close(&buf);
     DONE_EXEC;
     return data;
+}
+
+int mch_liststreamitems (chain_conf_t *conf, mch_stream_t mch_stream,
+                         int from, int count,
+                         json_item_h fn, void *userdata, int flags) {
+    int rc = -1;
+    strptr_t stream_type = get_stream_type_2(mch_stream);
+    if (count <= 0) count = 10;
+    if (from <= 0) from = 0;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("liststreamitems"));
+    json_add_str(&buf, CONST_STR_NULL, stream_type.ptr, stream_type.len, JSON_NEXT);
+    json_add_true(&buf, CONST_STR_NULL, JSON_NEXT);
+    json_add_int(&buf, CONST_STR_NULL, count, JSON_NEXT);
+    json_add_int(&buf, CONST_STR_NULL, from, JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_ARRAY == jr->type) {
+        json_enum_array(jr->data.a, fn, userdata, flags);
+        rc = 0;
+    }
+    DONE_EXEC
+    return rc;
+}
+
+int mch_liststreamkeyitems (chain_conf_t *conf, const char *key, size_t key_len, mch_stream_t mch_stream,
+                            int from , int count,
+                            json_item_h fn, void *userdata, int flags) {
+    int rc = -1;
+    strptr_t stream_type = get_stream_type_2(mch_stream);
+    if (count <= 0) count = 10;
+    if (from <= 0) from = 0;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("liststreamkeyitems"));
+    json_add_str(&buf, CONST_STR_NULL, stream_type.ptr, stream_type.len, JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, key, key_len, JSON_NEXT);
+    json_add_true(&buf, CONST_STR_NULL, JSON_NEXT);
+    json_add_int(&buf, CONST_STR_NULL, count, JSON_NEXT);
+    json_add_int(&buf, CONST_STR_NULL, from, JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_ARRAY == jr->type) {
+        json_enum_array(jr->data.a, fn, userdata, flags);
+        rc = 0;
+    }
+    DONE_EXEC
+    return rc;
 }
 
 char *mch_stop (chain_conf_t *conf) {
