@@ -708,6 +708,131 @@ int mch_importwallet (chain_conf_t *conf, const char *filename) {
     return rc;
 }
 
+static str_t *get_stream_type (mch_stream_t stream_type) {
+    int b = 0;
+    str_t *res = stralloc(64, 64);
+    if ((stream_type & MCH_STREAM_PUBKEYS)) {
+        strnadd(&res, CONST_STR_LEN("pubkeys"));
+        b = 1;
+    }
+    if ((stream_type & MCH_STREAM_ITEMS)) {
+        if (b) strnadd(&res, CONST_STR_LEN(","));
+        strnadd(&res, CONST_STR_LEN("items"));
+        b = 1;
+    }
+    if ((stream_type & MCH_STREAM_ACCESS)) {
+        if (b) strnadd(&res, CONST_STR_LEN(","));
+        strnadd(&res, CONST_STR_LEN("access"));
+    }
+    return res;
+}
+
+static strptr_t get_stream_type_2 (mch_stream_t mch_stream) {
+    strptr_t s = CONST_STR_INIT("");
+    switch (mch_stream) {
+        case MCH_STREAM_PUBKEYS:
+            s.ptr = "pubkeys"; s.len = sizeof("pubkeys")-1; break;
+        case MCH_STREAM_ITEMS:
+            s.ptr = "items"; s.len = sizeof("items")-1; break;
+        case MCH_STREAM_ACCESS:
+            s.ptr = "access"; s.len = sizeof("access")-1; break;
+    }
+    return s;
+}
+
+char *mch_createstream (chain_conf_t *conf, mch_stream_t mch_stream, int is_open) {
+    char *txid = NULL;
+    strptr_t stream_type = get_stream_type_2(mch_stream);
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("create"));
+    json_add_str(&buf, CONST_STR_NULL, CONST_STR_LEN("stream"), JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, stream_type.ptr, stream_type.len, JSON_NEXT);
+    if (0 == is_open)
+        json_add_false(&buf, CONST_STR_NULL, JSON_END);
+    else
+        json_add_true(&buf, CONST_STR_NULL, JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
+        txid = json_str(jr);
+    DONE_EXEC
+    return txid;
+}
+
+char *mch_publishform (chain_conf_t *conf, const char *address, size_t address_len,
+                       mch_stream_t mch_stream, char *key,
+                       char *data_hex, size_t data_hex_len) {
+    char *txid = NULL;
+    strptr_t stream_type = get_stream_type_2(mch_stream);
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("create"));
+    if (address && address_len) {
+        query_open(&buf, CONST_STR_LEN("publishfrom"));
+        json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
+    } else
+        query_open(&buf, CONST_STR_LEN("publish"));
+    json_add_str(&buf, CONST_STR_NULL, stream_type.ptr, stream_type.len, JSON_NEXT);
+    if (key)
+        json_add_str(&buf, CONST_STR_NULL, key, strlen(key), JSON_NEXT);
+    else
+        json_add_str(&buf, CONST_STR_NULL, CONST_STR_LEN(""), JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, data_hex, data_hex_len, JSON_END);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
+        txid = json_str(jr);
+    query_close(&buf);
+    DONE_EXEC;
+    return txid;
+}
+
+int mch_subscribestream (chain_conf_t *conf, mch_stream_t mch_stream) {
+    int rc = -1;
+    str_t *stream_type = get_stream_type(mch_stream);
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("subscribe"));
+    json_add_str(&buf, CONST_STR_NULL, stream_type->ptr, stream_type->len, JSON_END);
+    query_close(&buf);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && !jr)
+        rc = 0;
+    DONE_EXEC
+    free(stream_type);
+    return rc;
+}
+
+int mch_liststreampublisheritems (chain_conf_t *conf, mch_stream_t mch_stream,
+                                  const char *address, size_t address_len, int from, int count,
+                                  json_item_h fn, void *userdata, int flags) {
+    int rc = -1;
+    strptr_t stream_type = get_stream_type_2(mch_stream);
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("liststreampublisheritems"));
+    json_add_str(&buf, CONST_STR_NULL, stream_type.ptr, stream_type.len, JSON_NEXT);
+    json_add_str(&buf, CONST_STR_NULL, address, address_len, JSON_NEXT);
+    if (count <= 0) count = 10;
+    if (from <= 0) from = 0;
+    json_add_false(&buf, CONST_STR_NULL, JSON_NEXT);
+    json_add_int(&buf, CONST_STR_NULL, count, JSON_NEXT);
+    json_add_int(&buf, CONST_STR_NULL, from, JSON_END);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_ARRAY == jr->type) {
+        json_enum_array(jr->data.a, fn, userdata, flags);
+        rc = 0;
+    }
+    query_close(&buf);
+    DONE_EXEC
+    return rc;
+}
+
+char *mch_gettxoutdata (chain_conf_t *conf, const char *txid, size_t txid_len, int vout) {
+    char *data = NULL;
+    PREPARE_EXEC
+    query_open(&buf, CONST_STR_LEN("gettxoutdata"));
+    json_add_str(&buf, CONST_STR_NULL, txid, txid_len, JSON_NEXT);
+    json_add_int(&buf, CONST_STR_NULL, vout, JSON_END);
+    if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
+        data = json_str(jr);
+    query_close(&buf);
+    DONE_EXEC;
+    return data;
+}
+
 char *mch_stop (chain_conf_t *conf) {
     char *res = NULL;
     PREPARE_EXEC

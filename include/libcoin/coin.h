@@ -143,6 +143,11 @@ static inline void ltc_stop () {
 }
 
 // Multichain
+#define MCH_STREAM_PUBKEYS 0x01
+#define MCH_STREAM_ITEMS 0x02
+#define MCH_STREAM_ACCESS 0x04
+typedef int mch_stream_t;
+
 #define MCA_ISCOMPRESSED 0x00000001
 #define MCA_ISMINE 0x00000002
 #define MCA_ISSCRIPT 0x00000004
@@ -199,6 +204,15 @@ int mch_getblockchainparams (chain_conf_t *conf, json_item_h fn, void *userdata,
 int mch_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int flags);
 int mch_dumpwallet (chain_conf_t *conf, const char *filename);
 int mch_importwallet (chain_conf_t *conf, const char *filename);
+char *mch_createstream (chain_conf_t *conf, mch_stream_t mch_stream, int is_open);
+char *mch_publishform (chain_conf_t *conf, const char *address, size_t address_len,
+                       mch_stream_t mch_stream, char *key,
+                       char *data_hex, size_t data_hext_len);
+int mch_subscribestream (chain_conf_t *conf, mch_stream_t mch_stream);
+int mch_liststreampublisheritems (chain_conf_t *conf, mch_stream_t mch_stream,
+                                  const char *address, size_t address_len, int from, int count,
+                                  json_item_h fn, void *userdata, int flags);
+char *mch_gettxoutdata (chain_conf_t *conf, const char *txid, size_t txid_len, int vout);
 char *mch_stop (chain_conf_t *conf);
 
 #endif // __COIN_H__
