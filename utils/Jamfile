@@ -1,3 +1,9 @@
 SubDir TOP utils ;
-Main ethc : ethc.c linenoise.c ;
-LinkLibraries ethc : libcoin.a ;
+#Main ethc : ethc.c linenoise.c ;
+#LinkLibraries ethc : libcoin.a ;
+
+Main s_create : s_create.c ;
+LinkLibraries s_create : libcoin.a ;
+
+Main s_pubkey : s_pubkey.c ;
+LinkLibraries s_pubkey : libcoin.a ;

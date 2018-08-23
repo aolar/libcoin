@@ -15,6 +15,7 @@ CFLAGS.all += -fPIC -D_GNU_SOURCE -Wall -Iinclude/libcoin -fsplit-stack ;
 
 SubDir TOP ;
 SubInclude TOP src ;
+SubInclude TOP utils ;
 if $(debug) {
     SubInclude TOP test ;
 }

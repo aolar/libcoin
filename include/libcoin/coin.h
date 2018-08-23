@@ -205,7 +205,7 @@ int mch_getaddresses (chain_conf_t *conf, json_item_h fn, void *userdata, int fl
 int mch_dumpwallet (chain_conf_t *conf, const char *filename);
 int mch_importwallet (chain_conf_t *conf, const char *filename);
 char *mch_createstream (chain_conf_t *conf, mch_stream_t mch_stream, int is_open);
-char *mch_publishform (chain_conf_t *conf, const char *address, size_t address_len,
+char *mch_publishfrom (chain_conf_t *conf, const char *address, size_t address_len,
                        mch_stream_t mch_stream, char *key,
                        char *data_hex, size_t data_hext_len);
 int mch_subscribestream (chain_conf_t *conf, mch_stream_t mch_stream);
