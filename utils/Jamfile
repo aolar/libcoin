@@ -1,0 +1,3 @@
+SubDir TOP utils ;
+Main ethc : ethc.c linenoise.c ;
+LinkLibraries ethc : libcoin.a ;
