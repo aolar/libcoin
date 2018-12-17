@@ -20,7 +20,6 @@ rule -configure- {
     -configure-pkg-config-necessary-
         "libex"         "libex"
         "libcurl"       "libcurl"
-        "libsslw"       "libsslw"
     ;
     if [ -configure-test-libgmp- ] == 1 {
         -configure-add-line- "LINKLIBS.all += -lgmp -lm ;" ;

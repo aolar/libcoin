@@ -178,7 +178,8 @@ char *mch_issue (chain_conf_t *conf,
 char *mch_sendfrom_d (chain_conf_t *conf,
                       const char *from_address, size_t from_address_len,
                       const char *to_address, size_t to_address_len,
-                      const char *asset, size_t asset_len, double amount);
+                      const char *asset, size_t asset_len, double amount,
+                      const char *data, size_t data_len);
 mch_address_t *mch_validateaddress (chain_conf_t *conf, const char *address, size_t address_len);
 int mch_listaddresstransactions (chain_conf_t *conf,
                                  const char *address, size_t address_len,

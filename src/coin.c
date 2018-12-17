@@ -475,15 +475,29 @@ char *mch_issue (chain_conf_t *conf,
 char *mch_sendfrom_d (chain_conf_t *conf,
                       const char *from_address, size_t from_address_len,
                       const char *to_address, size_t to_address_len,
-                      const char *asset, size_t asset_len, double amount) {
+                      const char *asset, size_t asset_len, double amount,
+                      const char *data, size_t data_len) {
     char *txid = NULL;
     PREPARE_EXEC
-    query_open(&buf, CONST_STR_LEN("sendassetfrom"));
-    json_add_str(&buf, CONST_STR_NULL, from_address, from_address_len, JSON_NEXT);
-    json_add_str(&buf, CONST_STR_NULL, to_address, to_address_len, JSON_NEXT);
-    json_add_str(&buf, CONST_STR_NULL, asset, asset_len, JSON_NEXT);
-    json_add_double(&buf, CONST_STR_NULL, amount, JSON_END);
-    query_close(&buf);
+    if (!data) {
+        query_open(&buf, CONST_STR_LEN("sendassetfrom"));
+        json_add_str(&buf, CONST_STR_NULL, from_address, from_address_len, JSON_NEXT);
+        json_add_str(&buf, CONST_STR_NULL, to_address, to_address_len, JSON_NEXT);
+        json_add_str(&buf, CONST_STR_NULL, asset, asset_len, JSON_NEXT);
+        json_add_double(&buf, CONST_STR_NULL, amount, JSON_END);
+        query_close(&buf);
+    } else {
+        if (!data_len)
+            data_len = strlen(data);
+        query_open(&buf, CONST_STR_LEN("sendwithdatafrom"));
+        json_add_str(&buf, CONST_STR_NULL, from_address, from_address_len, JSON_NEXT);
+        json_add_str(&buf, CONST_STR_NULL, to_address, to_address_len, JSON_NEXT);
+        json_open_object(&buf, CONST_STR_NULL);
+        json_add_double(&buf, asset, asset_len, amount, JSON_END);
+        json_close_object(&buf, JSON_NEXT);
+        json_add_str(&buf, CONST_STR_NULL, data, data_len, JSON_END);
+        query_close(&buf);
+    }
     if ((json = do_rpc(curl, conf, &buf, &jr)) && JSON_STRING == jr->type)
         txid = strndup(jr->data.s.ptr, jr->data.s.len);
     DONE_EXEC
